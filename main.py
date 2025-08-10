@@ -1,16 +1,38 @@
-# Это пример Python скрипта.
+from telegram.ext import Application as PTBApplication, ApplicationBuilder
+from app.handlers import HANDLERS
+from Settings.config import AppSettings
+import logging
 
-# Нажмите ⌃R для выполнения или замените его своим кодом.
-# Нажмите Двойное нажатие ⇧ для поиска везде: классы, файлы, окна инструментов, действия и настройки.
+class Application(PTBApplication):
+    def __init__(self, app_settings: AppSettings, **kwargs):
+        super().__init__(**kwargs)
+        self._settings = app_settings
+        self._register_handlers()
+
+    def run(self) -> None:
+        self.run_polling()
+
+    def _register_handlers(self):
+        for handler in HANDLERS:
+            self.add_handler(handler)
+
+def configure_logging():
+    logging.basicConfig(
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        level=logging.INFO,
+    )
+    logging.getLogger("httpx").setLevel(logging.WARNING)
+
+def create_app(app_settings: AppSettings) -> Application:
+    application = ApplicationBuilder().application_class(Application, kwargs={'app_settings': app_settings}).token(app_settings.TELEGRAM_API_KEY.get_secret_value()).build()
+    return application  #type: ignore[return-value]
+
+if __name__ == "__main__":
+    configure_logging()
+    settings = AppSettings()
+    app = create_app(settings)
+    app.run()
 
 
-def print_hi(name):
-    # Используйте точку останова в строке кода ниже для отладки скрипта.
-    print(f'Hi, {name}')  # Нажмите ⌘F8 для переключения точки останова.
 
 
-# Нажмите зеленую кнопку на полях для запуска скрипта.
-if __name__ == '__main__':
-    print_hi('PyCharm')
-
-# Справка PyCharm доступна на https://www.jetbrains.com/help/pycharm/
