@@ -12,15 +12,9 @@ commands = [
     BotCommand("start", "Начать работу бота"),
     BotCommand("help", "Дополнительная информация по по командам"),
     BotCommand("add_note", "Создать заметку"),
+    BotCommand("list_notes", "Список заметок"),
     BotCommand("del_note", "Удалить заметку"),
 ]
-
-
-def echo(update: Update, context: CallbackContext) -> None:
-    """Эхо-бот: отвечает тем же, что и получил."""
-    user_text = update.message.text
-    update.message.reply_text(f'Вы сказали: {user_text}')
-
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = update.effective_user.id
@@ -36,18 +30,26 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         )
 
 async def help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if update.effective_chat:
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=
+            """
+            Это проект-питомец Дмитрия Петлина
+            Для начала работы введите команду /start
+            Для добавления заметки введите команду /add_note
+            """
+        )
+
+async def list_notes(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = update.effective_user.id
     all_notes_str = list_notes(user_id)
 
     if update.effective_chat:
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
-            text= all_notes_str
-            # """
-            # Это проект-питомец Дмитрия Петлина
-            # Для начала работы введите команду /start
-            # Для добавления заметки введите команду /add_note
-            # """
+            text= all_notes_str,
+            parse_mode='MarkdownV2'
         )
 
 async def add_note(update: Update, context: CallbackContext) -> None:
