@@ -1,6 +1,7 @@
 from telegram import Update, BotCommand
 from telegram.ext import ContextTypes, CallbackContext
-import psycopg2
+import psycopg2  # type: ignore
+import re
 
 
 HOST = '127.0.0.1'
@@ -20,12 +21,12 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = update.effective_user.id
     user = update.effective_user
     username = user.username
-    message_text = update.message.text
+    message_text = wash(update.message.text)
     await context.bot.set_my_commands(commands)
     if update.effective_chat:
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
-            text=f"*Добро пожаловать,* _{user_id}, {username}_\!\n Ваш текст: {message_text}",
+            text=f"*Добро пожаловать,* _{user_id}, {username}_\!\n Ваш текст: {message_text}", # type: ignore
             parse_mode='MarkdownV2'
         )
 
@@ -43,7 +44,7 @@ async def help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 async def list_notes(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = update.effective_user.id
-    all_notes_str = list_notes(user_id)
+    all_notes_str = listing(user_id)
 
     if update.effective_chat:
         await context.bot.send_message(
@@ -65,23 +66,20 @@ async def add_note(update: Update, context: CallbackContext) -> None:
 
     cursor.execute(f'insert into notes (uid, uname, date_note, note) values ({user_id}, \'{username}\', CURRENT_DATE, \'{user_text}\');')
     conn.commit()
-    cursor.execute(f'SELECT * FROM notes WHERE uid={user_id};', (1,))
+    cursor.close()
+    conn.close()
 
-    # Fetch all results
-    rows = cursor.fetchall()
-    all_notes_str = ''
-    for row in sorted(rows):
-        all_notes_str += str(row[0]) + '\t' + str(row[3]) + '\t' + str(row[4]) + '\n'
+    all_notes_str = listing(user_id)
+    user_text = wash(user_text)
 
     if update.effective_chat:
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
-            text=f"Добро пожаловать, {user_id}, {username}!\nВсе заметки:\n {all_notes_str}",
+            text=f"*Заметка* _{user_text}_ *была успешно добавлена\!*\nВсе заметки:\n {all_notes_str}",
             parse_mode='MarkdownV2'
         )
 
-    cursor.close()
-    conn.close()
+
 
 
 async def del_note(update: Update, context: CallbackContext) -> None:
@@ -107,9 +105,8 @@ async def del_note(update: Update, context: CallbackContext) -> None:
     cursor.close()
     conn.close()
 
-    all_notes_str = '' #list_notes(user_id)
-    # for row in sorted(rows):
-    #     all_notes_str += str(row[0]) + '\t' + str(row[3]) + '\t' + str(row[4]) + '\n'
+    all_notes_str = list_notes(user_id)
+
     if update.effective_chat:
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
@@ -118,7 +115,9 @@ async def del_note(update: Update, context: CallbackContext) -> None:
         )
 
 
-def list_notes(user_id):
+def listing(user_id):
+
+
     conn = psycopg2.connect(host=HOST, database=DATABASE, user=USER, password=PASSWORD)
     try:
         cursor = conn.cursor()
@@ -131,9 +130,17 @@ def list_notes(user_id):
     rows = cursor.fetchall()
     all_notes_str = ''
     for row in sorted(rows):
-        all_notes_str += str(row[0]).replace('-', '\-') + '\t' + str(row[3]) + '\t' + str(row[4]) + '\n'
+        row_id = wash(str(row[0]))
+        row_date = wash(str(row[3]))
+        row_text = wash(str(row[4]))
+        all_notes_str += '*' + row_id + '*' + '\t' + row_date + '\t' + '_' + row_text + '_' + '\n'
 
     cursor.close()
     conn.close()
 
     return all_notes_str
+
+def wash(text: str):
+    special_chars = ['_', '*', '[', ']', '(', ')', '~', "'", '>', '#', '+', '-', '=', '|', '{', '}', '.', '!']
+    pattern = '[' + re.escape(''.join(special_chars)) + ']'
+    return re.sub(pattern, lambda m: '\\' + m.group(), text)
