@@ -1,4 +1,9 @@
 from telegram.ext import BaseHandler, CommandHandler
-from app.handlers.commands import start, pet
+from app.handlers.commands import start, help, add_note
 
-HANDLERS: tuple[BaseHandler] = (CommandHandler("start", start), CommandHandler("pet", pet),)
+HANDLERS: tuple[BaseHandler] = (CommandHandler("start", start),
+                                CommandHandler("help", help),
+                                CommandHandler("add_note", add_note),
+                                )
+
+
