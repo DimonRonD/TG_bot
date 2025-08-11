@@ -1,7 +1,13 @@
 from telegram.ext import Application as PTBApplication, ApplicationBuilder
-from app.handlers import HANDLERS
+# from telegram import Bot, MenuButtonCommands
 from Settings.config import AppSettings
 import logging
+
+from app.handlers import HANDLERS
+
+
+
+
 
 class Application(PTBApplication):
     def __init__(self, app_settings: AppSettings, **kwargs):
@@ -15,6 +21,25 @@ class Application(PTBApplication):
     def _register_handlers(self):
         for handler in HANDLERS:
             self.add_handler(handler)
+
+# Создать класс Calendar
+class Calendar:
+    def __init__(self):
+        self.events = {}
+
+    # Создать метод create_event
+    def create_event(self, event_name, event_date, event_time, event_details):
+        event_id = len(self.events) + 1
+        event = {
+            "id": event_id,
+            "name": event_name,
+            "date": event_date,
+            "time": event_time,
+            "details": event_details
+        }
+        self.events[event_id] = event
+        return event_id
+
 
 def configure_logging():
     logging.basicConfig(

@@ -13,21 +13,24 @@ except psycopg2.OperationalError:
 
 user_id = 1093678627
 username = 'DimonRonD'
-
+user_text = 17
 # cursor.execute(f'insert into notes (uid, uname, date_note, note) values ({user_id}, \'{username}\', CURRENT_DATE, \'my very long text\');')
 # conn.commit()
-cursor.execute('SELECT * FROM notes;', (1,))
+cursor.execute(f'SELECT * FROM notes WHERE uid={user_id} and id={user_text};', (1,))
 
 
 # Fetch all results
 rows = cursor.fetchall()
 all_notes_str = ''
-for row in sorted(rows):
-    # for el in row:
-    #     print(el)
-    # print('\n')
-    all_notes_str += str(row[3]) + '\t' + str(row[4]) + '\n'
 
+if rows:
+    for row in sorted(rows):
+        # for el in row:
+        #     print(el)
+        # print('\n')
+        all_notes_str += str(row[3]) + '\t' + str(row[4]) + '\n'
+else:
+    print(f'Сочетание {user_text} и {user_id} не найдено')
 print(all_notes_str)
 
 
