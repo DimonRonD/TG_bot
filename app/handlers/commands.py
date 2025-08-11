@@ -7,8 +7,6 @@ HOST = '127.0.0.1'
 DATABASE = 'TGbotDB'
 USER = 'tgbotty'
 PASSWORD = 'yttobgt'
-BOT_TOKEN = '8329047740:AAEINfj4EFBzLmlJC4cH5DaJDAZwAcdQbiA'
-
 
 commands = [
     BotCommand("start", "Начать работу бота"),
@@ -33,18 +31,23 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if update.effective_chat:
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
-            text=f"Добро пожаловать, {user_id}, {username}!\n Ваш текст: {message_text}",
+            text=f"*Добро пожаловать,* _{user_id}, {username}_\!\n Ваш текст: {message_text}",
+            parse_mode='MarkdownV2'
         )
 
 async def help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    user_id = update.effective_user.id
+    all_notes_str = list_notes(user_id)
+
     if update.effective_chat:
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
-            text="""
-            Это проект-питомец Дмитрия Петлина
-            Для начала работы введите команду /start
-            Для добавления заметки введите команду /add_note
-            """
+            text= all_notes_str
+            # """
+            # Это проект-питомец Дмитрия Петлина
+            # Для начала работы введите команду /start
+            # Для добавления заметки введите команду /add_note
+            # """
         )
 
 async def add_note(update: Update, context: CallbackContext) -> None:
@@ -72,6 +75,7 @@ async def add_note(update: Update, context: CallbackContext) -> None:
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
             text=f"Добро пожаловать, {user_id}, {username}!\nВсе заметки:\n {all_notes_str}",
+            parse_mode='MarkdownV2'
         )
 
     cursor.close()
@@ -93,22 +97,22 @@ async def del_note(update: Update, context: CallbackContext) -> None:
     rows = cursor.fetchall()
     result = ''
     if rows:
-        result += f"Зашли в DELETE\n"
         cursor.execute(f'DELETE FROM notes WHERE uid={user_id} and id={user_text};')
         conn.commit()
-        result += (f'Заметка: {str(rows)} удалена')
+        result += (f'*Заметка №{str(rows[0][0])}:* _\"{str(rows[0][4])}\"_* удалена*')
     else:
         result += (f'Сочетание {user_text} и {user_id} для пользователя {username} не найдено')
     cursor.close()
     conn.close()
 
-    all_notes_str = list_notes(user_id)
-    for row in sorted(rows):
-        all_notes_str += str(row[0]) + '\t' + str(row[3]) + '\t' + str(row[4]) + '\n'
+    all_notes_str = '' #list_notes(user_id)
+    # for row in sorted(rows):
+    #     all_notes_str += str(row[0]) + '\t' + str(row[3]) + '\t' + str(row[4]) + '\n'
     if update.effective_chat:
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
-            text=result + '\nВсе заметки:\n' + all_notes_str
+            text=result + '\n*Все заметки:*\n' + all_notes_str,
+            parse_mode='MarkdownV2'
         )
 
 
@@ -125,7 +129,7 @@ def list_notes(user_id):
     rows = cursor.fetchall()
     all_notes_str = ''
     for row in sorted(rows):
-        all_notes_str += str(row[0]) + '\t' + str(row[3]) + '\t' + str(row[4]) + '\n'
+        all_notes_str += str(row[0]).replace('-', '\-') + '\t' + str(row[3]) + '\t' + str(row[4]) + '\n'
 
     cursor.close()
     conn.close()
