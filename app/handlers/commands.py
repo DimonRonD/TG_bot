@@ -4,6 +4,7 @@ import psycopg2  # type: ignore
 import re
 
 #TODO Перенести в закрытый файл
+#TODO добавить колонку со временем
 HOST = '127.0.0.1'
 DATABASE = 'TGbotDB'
 USER = 'tgbotty'
@@ -58,7 +59,10 @@ async def add_note(update: Update, context: CallbackContext) -> None:
     user = update.effective_user
     username = user.username
     #TODO Проверить, что приходит не пустое значение, если пустое - заменить
-    user_text = update.message.text.replace('/add_note', '').strip()
+    if update.message.text:
+        user_text = update.message.text.replace('/add_note', '').strip()
+    else:
+        user_text = 'Пустая заметка'
     conn = psycopg2.connect(host=HOST, database=DATABASE, user=USER, password=PASSWORD)
     try:
         cursor = conn.cursor()
