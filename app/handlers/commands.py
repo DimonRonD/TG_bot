@@ -58,10 +58,10 @@ async def add_note(update: Update, context: CallbackContext) -> None:
     user_id = update.effective_user.id
     user = update.effective_user
     username = user.username
-    #TODO Проверить, что приходит не пустое значение, если пустое - заменить
-    if update.message.text:
-        user_text = update.message.text.replace('/add_note', '').strip()
-    else:
+
+    user_text = update.message.text.replace('/add_note', '').strip()
+
+    if not user_text:
         user_text = 'Пустая заметка'
     conn = psycopg2.connect(host=HOST, database=DATABASE, user=USER, password=PASSWORD)
     try:
