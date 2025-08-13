@@ -2,13 +2,11 @@ from telegram import Update, BotCommand
 from telegram.ext import ContextTypes, CallbackContext
 import psycopg2  # type: ignore
 import re
+from Settings.config import settings as SETTINGS
 
-#TODO Перенести в закрытый файл
+
 #TODO добавить колонку со временем
-HOST = '127.0.0.1'
-DATABASE = 'TGbotDB'
-USER = 'tgbotty'
-PASSWORD = 'yttobgt'
+
 
 commands = [
     BotCommand("start", "Начать работу бота"),
@@ -63,7 +61,7 @@ async def add_note(update: Update, context: CallbackContext) -> None:
 
     if not user_text:
         user_text = 'Пустая заметка'
-    conn = psycopg2.connect(host=HOST, database=DATABASE, user=USER, password=PASSWORD)
+    conn = psycopg2.connect(host=SETTINGS.host, database=SETTINGS.database, user=SETTINGS.username, password=SETTINGS.password)
     try:
         cursor = conn.cursor()
     except psycopg2.OperationalError:
@@ -92,7 +90,7 @@ async def del_note(update: Update, context: CallbackContext) -> None:
     user = update.effective_user
     username = user.username
     user_text = update.message.text.replace('/del_note', '').strip()
-    conn = psycopg2.connect(host=HOST, database=DATABASE, user=USER, password=PASSWORD)
+    conn = psycopg2.connect(host=SETTINGS.host, database=SETTINGS.database, user=SETTINGS.username, password=SETTINGS.password)
     try:
         cursor = conn.cursor()
     except psycopg2.OperationalError:
@@ -123,7 +121,7 @@ async def del_note(update: Update, context: CallbackContext) -> None:
 def listing(user_id):
 
 
-    conn = psycopg2.connect(host=HOST, database=DATABASE, user=USER, password=PASSWORD)
+    conn = psycopg2.connect(host=SETTINGS.host, database=SETTINGS.database, user=SETTINGS.username, password=SETTINGS.password)
     try:
         cursor = conn.cursor()
     except psycopg2.OperationalError:
