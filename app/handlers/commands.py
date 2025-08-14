@@ -6,7 +6,7 @@ from Settings.config import settings as SETTINGS
 
 
 #TODO добавить колонку со временем
-
+#TODO добавить файлы template для .env и .envdb
 
 commands = [
     BotCommand("start", "Начать работу бота"),
