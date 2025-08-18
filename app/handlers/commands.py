@@ -4,10 +4,6 @@ import psycopg2  # type: ignore
 import re
 from Settings.config import settings as SETTINGS
 
-
-#TODO добавить колонку со временем
-#TODO добавить файлы template для .env и .envdb
-
 commands = [
     BotCommand("start", "Начать работу бота"),
     BotCommand("help", "Дополнительная информация по по командам"),
@@ -90,25 +86,28 @@ async def del_note(update: Update, context: CallbackContext) -> None:
     user = update.effective_user
     username = user.username
     user_text = update.message.text.replace('/del_note', '').strip()
-    conn = psycopg2.connect(host=SETTINGS.host, database=SETTINGS.database, user=SETTINGS.username, password=SETTINGS.password)
-    try:
-        cursor = conn.cursor()
-    except psycopg2.OperationalError:
-        print(psycopg2.OperationalError)
-    cursor.execute(f'SELECT * FROM notes WHERE uid={user_id} and id={user_text};', (1,))
-
-    rows = cursor.fetchall()
     result = ''
-    if rows:
-        cursor.execute(f'DELETE FROM notes WHERE uid={user_id} and id={user_text};')
-        conn.commit()
-        result += (f'*Заметка №{str(rows[0][0])}:* _\"{str(rows[0][4])}\"_* удалена*')
-    else:
-        result += (f'Сочетание {user_text} и {user_id} для пользователя {username} не найдено')
-    cursor.close()
-    conn.close()
+    if user_text.isdigit():
+        conn = psycopg2.connect(host=SETTINGS.host, database=SETTINGS.database, user=SETTINGS.username, password=SETTINGS.password)
+        try:
+            cursor = conn.cursor()
+        except psycopg2.OperationalError:
+            print(psycopg2.OperationalError)
+        cursor.execute(f'SELECT * FROM notes WHERE uid={user_id} and id={user_text};', (1,))
 
-    all_notes_str = list_notes(user_id)
+        rows = cursor.fetchall()
+        if rows:
+            cursor.execute(f'DELETE FROM notes WHERE uid={user_id} and id={user_text};')
+            conn.commit()
+            result += (f'*Заметка №{str(rows[0][0])}:* _\"{str(rows[0][4])}\"_* удалена*')
+        else:
+            result += (f'Сочетание {user_text} и {user_id} для пользователя {username} не найдено')
+        cursor.close()
+        conn.close()
+    else:
+        result = (f'Вы ввели {user_text}\. Здесь должен быть введён номер заметки для удаления\.')
+
+    all_notes_str = listing(user_id)
 
     if update.effective_chat:
         await context.bot.send_message(

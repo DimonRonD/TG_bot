@@ -1,5 +1,4 @@
 from telegram.ext import Application as PTBApplication, ApplicationBuilder
-# from telegram import Bot, MenuButtonCommands
 from Settings.config import AppSettings
 import logging
 
